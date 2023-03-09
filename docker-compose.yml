@@ -19,8 +19,9 @@ services:
     volumes:
       - ./storage/mariadb-data:/var/lib/mysql
     environment:
-      MARIADB_USER: ${DB_USERNAME}
       MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
+      MARIADB_USER: ${DB_USERNAME}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
     restart: always
     ports:
       - "3306:3306"
