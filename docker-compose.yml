@@ -9,7 +9,21 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     restart: always
     ports:
-      - "${DB_PORT}:5432"
+      - "5432:5432"
+    networks:
+      - my-local-network
+
+  mariadb:
+    image: mariadb
+    container_name: my-mariadb
+    volumes:
+      - ./storage/mariadb-data:/var/lib/mysql
+    environment:
+      MARIADB_USER: ${DB_USERNAME}
+      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
+    restart: always
+    ports:
+      - "3306:3306"
     networks:
       - my-local-network
 
