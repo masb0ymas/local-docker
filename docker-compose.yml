@@ -20,8 +20,25 @@ services:
       - ./storage/mariadb-data:/var/lib/mysql
     environment:
       MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
-      MARIADB_USER: ${DB_USERNAME}
+      MARIADB_DATABASE: ${DB_DATABASE}
+      MARIADB_USER: root
       MARIADB_PASSWORD: ${DB_PASSWORD}
+    restart: always
+    ports:
+      - "3307:3306"
+    networks:
+      - my-local-network
+
+  mysql:
+    image: mysql:5.7-debian
+    container_name: my-mysql
+    volumes:
+      - ./storage/mysql-data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     restart: always
     ports:
       - "3306:3306"
