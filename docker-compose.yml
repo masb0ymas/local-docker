@@ -6,7 +6,7 @@ services:
     volumes:
       - ./storage/postgres-data:/var/lib/postgresql/data
     environment:
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
     restart: always
     ports:
       - "5432:5432"
@@ -19,10 +19,10 @@ services:
     volumes:
       - ./storage/mariadb-data:/var/lib/mysql
     environment:
-      MARIADB_ROOT_PASSWORD: ${DB_PASSWORD}
-      MARIADB_DATABASE: ${DB_DATABASE}
-      MARIADB_USER: root
-      MARIADB_PASSWORD: ${DB_PASSWORD}
+      - MARIADB_ROOT_PASSWORD=${DB_PASSWORD}
+      - MARIADB_DATABASE=${DB_DATABASE}
+      - MARIADB_USER=root
+      - MARIADB_PASSWORD=${DB_PASSWORD}
     restart: always
     ports:
       - "3306:3306"
@@ -41,21 +41,35 @@ services:
     networks:
       - my-local-network
 
-  minio:
-    image: "quay.io/minio/minio"
-    container_name: my-s3-minio
-    command: server /data --console-address ":9090"
-    volumes:
-      - ./storage/minio-data:/minio/data:/data
+  rabbitmq:
+    image: rabbitmq
+    container_name: my-rabbitmq
     environment:
-      MINIO_ROOT_USER: ${MINIO_USERNAME}
-      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
-    restart: always
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
     ports:
-      - "${MINIO_PORT}:9000"
-      - "9090:9090"
+      - "${RABBITMQ_PORT}:5672"
+    volumes:
+      - ./storage/rabbitmq-data:/var/lib/rabbitmq
+    restart: always
     networks:
       - my-local-network
+
+  # minio:
+  #   image: "quay.io/minio/minio"
+  #   container_name: my-s3-minio
+  #   command: server /data --console-address ":9090"
+  #   volumes:
+  #     - ./storage/minio-data:/minio/data:/data
+  #   environment:
+  #     - MINIO_ROOT_USER=${MINIO_USERNAME}
+  #     - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD}
+  #   restart: always
+  #   ports:
+  #     - "${MINIO_PORT}:9000"
+  #     - "9090:9090"
+  #   networks:
+  #     - my-local-network
 
 volumes:
   storage:
