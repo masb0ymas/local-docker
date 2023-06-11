@@ -11,7 +11,7 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - my-local-network
+      - localhost-network
 
   mariadb:
     image: mariadb
@@ -27,7 +27,7 @@ services:
     ports:
       - "3306:3306"
     networks:
-      - my-local-network
+      - localhost-network
 
   redis:
     image: redis
@@ -39,7 +39,7 @@ services:
       - ./storage/redis-data:/var/lib/redis
     restart: always
     networks:
-      - my-local-network
+      - localhost-network
 
   rabbitmq:
     image: rabbitmq
@@ -53,7 +53,16 @@ services:
       - ./storage/rabbitmq-data:/var/lib/rabbitmq
     restart: always
     networks:
-      - my-local-network
+      - localhost-network
+
+  statping:
+    image: quay.io/statping-ng/statping-ng
+    container_name: my-statping
+    ports:
+      - "8080:8080"
+    restart: always
+    networks:
+      - localhost-network
 
   # minio:
   #   image: "quay.io/minio/minio"
@@ -69,12 +78,12 @@ services:
   #     - "${MINIO_PORT}:9000"
   #     - "9090:9090"
   #   networks:
-  #     - my-local-network
+  #     - localhost-network
 
 volumes:
   storage:
 
 
 networks:
-  my-local-network:
-    driver: bridge
+  localhost-network:
+    external: true
