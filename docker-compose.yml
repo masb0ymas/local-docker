@@ -3,55 +3,69 @@ services:
   postgres:
     image: postgres
     container_name: my-postgres
-    volumes:
-      - ./storage/postgres-data:/var/lib/postgresql/data
+    restart: always
     environment:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
-    restart: always
     ports:
       - "5432:5432"
+    volumes:
+      - ./storage/postgres-data:/var/lib/postgresql/data
     networks:
       - localhost-network
 
   mariadb:
     image: mariadb
     container_name: my-mariadb
-    volumes:
-      - ./storage/mariadb-data:/var/lib/mysql
+    restart: always
     environment:
       - MARIADB_ROOT_PASSWORD=${DB_PASSWORD}
       - MARIADB_DATABASE=${DB_DATABASE}
       - MARIADB_USER=root
       - MARIADB_PASSWORD=${DB_PASSWORD}
-    restart: always
     ports:
       - "3306:3306"
+    volumes:
+      - ./storage/mariadb-data:/var/lib/mysql
     networks:
       - localhost-network
 
   redis:
     image: redis
     container_name: my-redis
+    restart: always
     command: redis-server --requirepass ${REDIS_PASSWORD}
     ports:
-      - "${REDIS_PORT}:6379"
+      - "6379:6379"
     volumes:
       - ./storage/redis-data:/var/lib/redis
-    restart: always
     networks:
       - localhost-network
 
   rabbitmq:
     image: rabbitmq
     container_name: my-rabbitmq
+    restart: always
     environment:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
     ports:
-      - "${RABBITMQ_PORT}:5672"
+      - "5672:5672"
     volumes:
       - ./storage/rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - localhost-network
+
+  mongodb:
+    image: bitnami/mongodb:latest
+    container_name: my-mongodb
     restart: always
+    environment:
+      - MONGODB_ROOT_PASSWORD=${DB_PASSWORD}
+      - MONGODB_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./storage/mongodb-data:/bitnami/mongodb
     networks:
       - localhost-network
 
@@ -70,15 +84,15 @@ services:
     image: "quay.io/minio/minio"
     container_name: my-s3-minio
     command: server /data --console-address ":9090"
-    volumes:
-      - ./storage/minio-data:/minio/data:/data
+    restart: always
     environment:
       - MINIO_ROOT_USER=${MINIO_USERNAME}
       - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD}
-    restart: always
     ports:
       - "9000:9000"
       - "9090:9090"
+    volumes:
+      - ./storage/minio-data:/data
     networks:
       - localhost-network
 
