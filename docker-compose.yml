@@ -14,7 +14,7 @@ services:
       - localhost-network
 
   mariadb:
-    image: mariadb
+    image: mariadb:latest
     container_name: my-mariadb
     restart: always
     environment:
@@ -26,6 +26,22 @@ services:
       - "3306:3306"
     volumes:
       - ./storage/mariadb-data:/var/lib/mysql
+    networks:
+      - localhost-network
+
+  mysql:
+    image: mysql:latest
+    container_name: my-mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./storage/mysql-data:/var/lib/mysql
     networks:
       - localhost-network
 
@@ -77,6 +93,35 @@ services:
       - "3001:3001"
     volumes:
       - ./storage/uptime-data:/app/data
+    networks:
+      - localhost-network
+
+  ghost:
+    image: ghost:5-alpine
+    container_name: my-ghost
+    restart: always
+    ports:
+      - 2368:2368
+    environment:
+      # see https://ghost.org/docs/config/#configuration-options
+      - "url=http://localhost:2368"
+      # setup database
+      - "database__client=mysql"
+      - "database__connection__host=mysql"
+      - "database__connection__port=3306"
+      - "database__connection__user=root"
+      - "database__connection__password=${DB_PASSWORD}"
+      - "database__connection__database=dev_dbghost"
+      # smtp email
+      - "mail__transport=${MAIL_TRANSPORT}"
+      - "mail__from=${MAIL_FROM}"
+      - "mail__options__host=${MAIL_HOST}"
+      - "mail__options__port=${MAIL_PORT}"
+      - "mail__options__secureConnection=${MAIL_SECURE_CONNECTION}"
+      - "mail__options__auth__user=${MAIL_USER}"
+      - "mail__options__auth__pass=${MAIL_PASSWORD}"
+    volumes:
+      - ./storage/ghost-data:/var/lib/ghost/content
     networks:
       - localhost-network
 
