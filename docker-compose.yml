@@ -84,6 +84,20 @@ services:
     networks:
       - localhost-network
 
+  mailpit:
+    image: axllent/mailpit
+    container_name: my-mailpit
+    restart: always
+    environment:
+      - TZ=Asia/Jakarta
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    volumes:
+      - ./storage/mailpit-data:/data
+    networks:
+      - localhost-network
+
   uptime:
     image: louislam/uptime-kuma:1
     container_name: my-uptime
