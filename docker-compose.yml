@@ -1,4 +1,5 @@
-version: "3.8"
+# version: "3.8"
+
 services:
   postgres:
     image: postgres
@@ -29,20 +30,20 @@ services:
     networks:
       - localhost-network
 
-  mysql:
-    image: mysql:latest
-    container_name: my-mysql
-    restart: always
-    environment:
-      # default username = root
-      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
-      - MYSQL_PASSWORD=${DB_PASSWORD}
-    ports:
-      - "3306:3306"
-    volumes:
-      - ./storage/mysql-data:/var/lib/mysql
-    networks:
-      - localhost-network
+  # mysql:
+  #   image: mysql:5.7
+  #   container_name: my-mysql
+  #   restart: always
+  #   environment:
+  #     # default username = root
+  #     - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+  #     - MYSQL_PASSWORD=${DB_PASSWORD}
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - ./storage/mysql-data:/var/lib/mysql
+  #   networks:
+  #     - localhost-network
 
   redis:
     image: redis
@@ -56,87 +57,87 @@ services:
     networks:
       - localhost-network
 
-  rabbitmq:
-    image: rabbitmq
-    container_name: my-rabbitmq
-    restart: always
-    environment:
-      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME}
-      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
-    ports:
-      - "5672:5672"
-    volumes:
-      - ./storage/rabbitmq-data:/var/lib/rabbitmq
-    networks:
-      - localhost-network
+  # rabbitmq:
+  #   image: rabbitmq
+  #   container_name: my-rabbitmq
+  #   restart: always
+  #   environment:
+  #     - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME}
+  #     - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD}
+  #   ports:
+  #     - "5672:5672"
+  #   volumes:
+  #     - ./storage/rabbitmq-data:/var/lib/rabbitmq
+  #   networks:
+  #     - localhost-network
 
-  mongodb:
-    image: bitnami/mongodb:latest
-    container_name: my-mongodb
-    restart: always
-    environment:
-      - MONGODB_ROOT_PASSWORD=${DB_PASSWORD}
-      - MONGODB_PASSWORD=${DB_PASSWORD}
-    ports:
-      - "27017:27017"
-    volumes:
-      - ./storage/mongodb-data:/bitnami/mongodb
-    networks:
-      - localhost-network
+  # mongodb:
+  #   image: bitnami/mongodb:latest
+  #   container_name: my-mongodb
+  #   restart: always
+  #   environment:
+  #     - MONGODB_ROOT_PASSWORD=${DB_PASSWORD}
+  #     - MONGODB_PASSWORD=${DB_PASSWORD}
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - ./storage/mongodb-data:/bitnami/mongodb
+  #   networks:
+  #     - localhost-network
 
-  mailpit:
-    image: axllent/mailpit
-    container_name: my-mailpit
-    restart: always
-    environment:
-      - TZ=Asia/Jakarta
-    ports:
-      - "8025:8025"
-      - "1025:1025"
-    volumes:
-      - ./storage/mailpit-data:/data
-    networks:
-      - localhost-network
+  # mailpit:
+  #   image: axllent/mailpit
+  #   container_name: my-mailpit
+  #   restart: always
+  #   environment:
+  #     - TZ=Asia/Jakarta
+  #   ports:
+  #     - "8025:8025"
+  #     - "1025:1025"
+  #   volumes:
+  #     - ./storage/mailpit-data:/data
+  #   networks:
+  #     - localhost-network
 
-  uptime:
-    image: louislam/uptime-kuma:1
-    container_name: my-uptime
-    restart: always
-    ports:
-      - "3001:3001"
-    volumes:
-      - ./storage/uptime-data:/app/data
-    networks:
-      - localhost-network
+  # uptime:
+  #   image: louislam/uptime-kuma:1
+  #   container_name: my-uptime
+  #   restart: always
+  #   ports:
+  #     - "3001:3001"
+  #   volumes:
+  #     - ./storage/uptime-data:/app/data
+  #   networks:
+  #     - localhost-network
 
-  ghost:
-    image: ghost:5-alpine
-    container_name: my-ghost
-    restart: always
-    ports:
-      - 2368:2368
-    environment:
-      # see https://ghost.org/docs/config/#configuration-options
-      - "url=http://localhost:2368"
-      # setup database
-      - "database__client=mysql"
-      - "database__connection__host=${GHOST_HOST}"
-      - "database__connection__port=${GHOST_PORT}"
-      - "database__connection__user=${GHOST_USERNAME}"
-      - "database__connection__password=${GHOST_PASSWORD}"
-      - "database__connection__database=${GHOST_DATABASE}"
-      # smtp email
-      - "mail__transport=${MAIL_TRANSPORT}"
-      - "mail__from=${MAIL_FROM}"
-      - "mail__options__host=${MAIL_HOST}"
-      - "mail__options__port=${MAIL_PORT}"
-      - "mail__options__secureConnection=${MAIL_SECURE_CONNECTION}"
-      - "mail__options__auth__user=${MAIL_USER}"
-      - "mail__options__auth__pass=${MAIL_PASSWORD}"
-    volumes:
-      - ./storage/ghost-data:/var/lib/ghost/content
-    networks:
-      - localhost-network
+  # ghost:
+  #   image: ghost:5-alpine
+  #   container_name: my-ghost
+  #   restart: always
+  #   ports:
+  #     - 2368:2368
+  #   environment:
+  #     # see https://ghost.org/docs/config/#configuration-options
+  #     - "url=http://localhost:2368"
+  #     # setup database
+  #     - "database__client=mysql"
+  #     - "database__connection__host=${GHOST_HOST}"
+  #     - "database__connection__port=${GHOST_PORT}"
+  #     - "database__connection__user=${GHOST_USERNAME}"
+  #     - "database__connection__password=${GHOST_PASSWORD}"
+  #     - "database__connection__database=${GHOST_DATABASE}"
+  #     # smtp email
+  #     - "mail__transport=${MAIL_TRANSPORT}"
+  #     - "mail__from=${MAIL_FROM}"
+  #     - "mail__options__host=${MAIL_HOST}"
+  #     - "mail__options__port=${MAIL_PORT}"
+  #     - "mail__options__secureConnection=${MAIL_SECURE_CONNECTION}"
+  #     - "mail__options__auth__user=${MAIL_USER}"
+  #     - "mail__options__auth__pass=${MAIL_PASSWORD}"
+  #   volumes:
+  #     - ./storage/ghost-data:/var/lib/ghost/content
+  #   networks:
+  #     - localhost-network
 
   minio:
     image: "quay.io/minio/minio"
@@ -154,9 +155,93 @@ services:
     networks:
       - localhost-network
 
+  # ollama:
+  #   image: "ollama/ollama"
+  #   container_name: my-ollama
+  #   restart: always
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ./storage/ollama-data:/root/.ollama
+  #   networks:
+  #     - localhost-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USERNAME}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - 3000:3000
+    volumes:
+      - ./storage/grafana-data:/var/lib/grafana
+      - ./storage/grafana-data/provisioning:/etc/grafana/provisioning
+    networks:
+      - localhost-network
+    labels:
+      org.label-schema.group: "monitoring"
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+      - "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
+    ports:
+      - 9100:9100
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    networks:
+      - localhost-network
+    labels:
+      org.label-schema.group: "monitoring"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--web.enable-lifecycle"
+    ports:
+      - 9191:9090
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./storage/prometheus-data:/prometheus
+    networks:
+      - localhost-network
+    labels:
+      org.label-schema.group: "monitoring"
+
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/alertmanager/config.yml"
+      - "--storage.path=/alertmanager"
+    ports:
+      - 9093:9093
+    volumes:
+      - ./storage/alertmanager-data:/etc/alertmanager
+    networks:
+      - localhost-network
+    labels:
+      org.label-schema.group: "monitoring"
+
 volumes:
   storage:
-
 
 networks:
   localhost-network:
