@@ -234,6 +234,7 @@ services:
     ports:
       - 9093:9093
     volumes:
+      - './config/alertmanager.yml:/etc/alertmanager/config.yml'
       - ./storage/alertmanager-data:/etc/alertmanager
     networks:
       - localhost-network
