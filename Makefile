@@ -1,9 +1,14 @@
-DOCKER_COMPOSE_UP = docker-compose.yml up -d --build
-DOCKER_COMPOSE_DOWN = docker-compose.yml down
+DOCKER_COMPOSE_UP = docker-compose.dev.yml up -d --build
+DOCKER_COMPOSE_DOWN = docker-compose.dev.yml down
 
-.PHONY: network.localhost
-network.localhost:
-	docker network create localhost-network
+.PHONY: secret
+secret:
+	chmod +x secret.sh
+	bash secret.sh
+
+.PHONY: docker.network
+docker.network:
+	docker network create local-network
 
 .PHONY: docker.up
 docker.up:
