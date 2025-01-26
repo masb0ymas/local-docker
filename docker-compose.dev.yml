@@ -4,7 +4,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    image: infisical/infisical:latest-postgres
+    image: docker.io/infisical/infisical:latest-postgres
     env_file: .env
     command: npm run migration:latest
     pull_policy: always
@@ -21,7 +21,7 @@ services:
         condition: service_started
       db-migration:
         condition: service_completed_successfully
-    image: infisical/infisical:latest-postgres
+    image: docker.io/infisical/infisical:latest-postgres
     pull_policy: always
     env_file: .env
     ports:
@@ -32,7 +32,7 @@ services:
       - local-network
 
   redis:
-    image: redis
+    image: docker.io/redis
     container_name: infisical-dev-redis
     env_file: .env
     restart: always
@@ -47,7 +47,7 @@ services:
 
   db:
     container_name: infisical-db
-    image: postgres:15-alpine
+    image: docker.io/postgres:15-alpine
     restart: always
     env_file: .env
     ports:
@@ -64,7 +64,7 @@ services:
 
   mariadb:
     container_name: infisical-mariadb
-    image: mariadb:latest
+    image: docker.io/mariadb:latest
     restart: always
     env_file: .env
     ports:
@@ -76,7 +76,7 @@ services:
 
   minio:
     container_name: infisical-minio
-    image: "quay.io/minio/minio"
+    image: quay.io/minio/minio
     command: server /data --console-address ":9090"
     restart: always
     env_file: .env
