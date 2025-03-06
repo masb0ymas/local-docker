@@ -33,7 +33,7 @@ services:
 
   redis:
     image: docker.io/redis
-    container_name: infisical-dev-redis
+    container_name: infisical-redis
     env_file: .env
     restart: always
     environment:
@@ -85,6 +85,20 @@ services:
       - "9090:9090"
     volumes:
       - minio_data:/data
+    networks:
+      - local-network
+
+  dozzle:
+    image: docker.io/amir20/dozzle:latest
+    container_name: infisical-dozzle
+    restart: unless-stopped
+    environment:
+      DOZZLE_AUTH_PROVIDER: simple
+    ports:
+      - "8081:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./data:/data
     networks:
       - local-network
 
