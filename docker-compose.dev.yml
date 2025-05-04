@@ -1,6 +1,6 @@
 services:
   db-migration:
-    container_name: infisical-db-migration
+    container_name: local-db-migration
     depends_on:
       db:
         condition: service_healthy
@@ -12,7 +12,7 @@ services:
       - local-network
 
   backend:
-    container_name: infisical-backend
+    container_name: local-backend
     restart: unless-stopped
     depends_on:
       db:
@@ -32,8 +32,8 @@ services:
       - local-network
 
   redis:
-    image: docker.io/redis
-    container_name: infisical-redis
+    image: docker.io/redis:7.4-alpine
+    container_name: local-redis
     env_file: .env
     restart: always
     environment:
@@ -46,7 +46,7 @@ services:
       - redis_data:/data
 
   db:
-    container_name: infisical-db
+    container_name: local-db
     image: docker.io/postgres:15-alpine
     restart: always
     env_file: .env
@@ -63,7 +63,7 @@ services:
       retries: 10
 
   mariadb:
-    container_name: infisical-mariadb
+    container_name: local-mariadb
     image: docker.io/mariadb:latest
     restart: always
     env_file: .env
@@ -74,8 +74,25 @@ services:
     networks:
       - local-network
 
+  rabbitmq:
+    container_name: local-rabbitmq
+    image: rabbitmq:3.12-management
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - local-network
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 3s
+
   minio:
-    container_name: infisical-minio
+    container_name: local-minio
     image: quay.io/minio/minio
     command: server /data --console-address ":9090"
     restart: always
@@ -90,7 +107,7 @@ services:
 
   dozzle:
     image: docker.io/amir20/dozzle:latest
-    container_name: infisical-dozzle
+    container_name: local-dozzle
     restart: unless-stopped
     environment:
       DOZZLE_AUTH_PROVIDER: simple
@@ -102,6 +119,17 @@ services:
     networks:
       - local-network
 
+  chartdb:
+    image: ghcr.io/chartdb/chartdb:latest
+    container_name: local-chartdb
+    restart: unless-stopped
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "8234:80"
+    networks:
+      - local-network
+
 volumes:
   pg_data:
     driver: local
@@ -110,6 +138,8 @@ volumes:
   minio_data:
     driver: local
   mariadb_data:
+    driver: local
+  rabbitmq_data:
     driver: local
 
 networks:
