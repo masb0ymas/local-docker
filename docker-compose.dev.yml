@@ -1,52 +1,6 @@
 services:
-  db-migration:
-    container_name: local-db-migration
-    depends_on:
-      db:
-        condition: service_healthy
-    image: docker.io/infisical/infisical:latest-postgres
-    env_file: .env
-    command: npm run migration:latest
-    pull_policy: always
-    networks:
-      - local-network
-
-  backend:
-    container_name: local-backend
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_started
-      db-migration:
-        condition: service_completed_successfully
-    image: docker.io/infisical/infisical:latest-postgres
-    pull_policy: always
-    env_file: .env
-    ports:
-      - 80:8080
-    environment:
-      - NODE_ENV=production
-    networks:
-      - local-network
-
-  redis:
-    image: docker.io/redis:7.4-alpine
-    container_name: local-redis
-    env_file: .env
-    restart: always
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
-    ports:
-      - 6379:6379
-    networks:
-      - local-network
-    volumes:
-      - redis_data:/data
-
-  db:
-    container_name: local-db
+  local-postgres:
+    container_name: local-postgres
     image: docker.io/postgres:15-alpine
     restart: always
     env_file: .env
@@ -62,19 +16,49 @@ services:
       timeout: 10s
       retries: 10
 
-  mariadb:
-    container_name: local-mariadb
-    image: docker.io/mariadb:latest
+  # local-mariadb:
+  #   container_name: local-mariadb
+  #   image: docker.io/mariadb:latest
+  #   restart: always
+  #   environment:
+  #     - MARIADB_ROOT_PASSWORD=${DB_PASSWORD}
+  #     - MARIADB_PASSWORD=${DB_PASSWORD}
+  #   ports:
+  #     - "3306:3306"
+  #   volumes:
+  #     - mariadb_data:/var/lib/mysql
+  #   networks:
+  #     - local-network
+
+  local-mysql:
+    image: docker.io/mysql:latest
+    container_name: local-mysql
     restart: always
-    env_file: .env
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
     ports:
       - "3306:3306"
-    volumes:
-      - mariadb_data:/var/lib/mysql
     networks:
       - local-network
+    volumes:
+      - mysql_data:/var/lib/mysql
 
-  rabbitmq:
+  local-redis:
+    image: docker.io/redis:7.4-alpine
+    container_name: local-redis
+    env_file: .env
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 6379:6379
+    networks:
+      - local-network
+    volumes:
+      - redis_data:/data
+
+  local-rabbitmq:
     container_name: local-rabbitmq
     image: rabbitmq:3.12-management
     ports:
@@ -91,7 +75,7 @@ services:
       retries: 3
       start_period: 3s
 
-  minio:
+  local-minio:
     container_name: local-minio
     image: quay.io/minio/minio
     command: server /data --console-address ":9090"
@@ -105,7 +89,7 @@ services:
     networks:
       - local-network
 
-  dozzle:
+  local-logger:
     image: docker.io/amir20/dozzle:latest
     container_name: local-dozzle
     restart: unless-stopped
@@ -119,7 +103,7 @@ services:
     networks:
       - local-network
 
-  chartdb:
+  local-chartdb:
     image: ghcr.io/chartdb/chartdb:latest
     container_name: local-chartdb
     restart: unless-stopped
@@ -127,6 +111,35 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
       - "8234:80"
+    networks:
+      - local-network
+
+  local-ghost:
+    image: docker.io/ghost:5-alpine
+    container_name: blog-ghost
+    restart: always
+    environment:
+      # see https://ghost.org/docs/config/#configuration-options
+      - url=http://localhost:2368
+      # setup database
+      - database__client=mysql
+      - database__connection__host=${GHOST_HOST}
+      - database__connection__port=${GHOST_PORT}
+      - database__connection__user=${GHOST_USERNAME}
+      - database__connection__password=${GHOST_PASSWORD}
+      - database__connection__database=${GHOST_DATABASE}
+      # smtp email
+      - mail__transport=${MAIL_TRANSPORT}
+      - mail__from=${MAIL_FROM}
+      - mail__options__host=${MAIL_HOST}
+      - mail__options__port=${MAIL_PORT}
+      - mail__options__secureConnection=${MAIL_SECURE_CONNECTION}
+      - mail__options__auth__user=${MAIL_USER}
+      - mail__options__auth__pass=${MAIL_PASSWORD}
+    ports:
+      - "2368:2368"
+    volumes:
+      - ghost_data:/var/lib/ghost/content
     networks:
       - local-network
 
@@ -139,7 +152,11 @@ volumes:
     driver: local
   mariadb_data:
     driver: local
+  mysql_data:
+    driver: local
   rabbitmq_data:
+    driver: local
+  ghost_data:
     driver: local
 
 networks:
