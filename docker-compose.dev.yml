@@ -51,12 +51,18 @@ services:
     restart: always
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
+    command: ["redis-server", "--maxmemory-policy", "noeviction"]
     ports:
       - 6379:6379
     networks:
       - local-network
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   local-rabbitmq:
     container_name: local-rabbitmq
@@ -96,7 +102,7 @@ services:
     environment:
       DOZZLE_AUTH_PROVIDER: simple
     ports:
-      - "8123:8080"
+      - "3100:8080" # for dozzle
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/data
@@ -110,7 +116,7 @@ services:
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
-      - "8234:80"
+      - "3101:80" # for chartdb
     networks:
       - local-network
 
@@ -143,6 +149,101 @@ services:
     networks:
       - local-network
 
+  # clickhouse for open panel
+  local-clickhouse:
+    image: clickhouse/clickhouse-server:24.3.2-alpine
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "8123:8123" # for HTTP
+      - "8124:9000" # for native client
+    volumes:
+      - op-ch-data:/var/lib/clickhouse
+      - op-ch-logs:/var/log/clickhouse-server
+      - ./clickhouse/clickhouse-config.xml:/etc/clickhouse-server/config.d/op-config.xml:ro
+      - ./clickhouse/clickhouse-user-config.xml:/etc/clickhouse-server/users.d/op-user-config.xml:ro
+      - ./clickhouse/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+    networks:
+      - local-network
+    healthcheck:
+      test: ["CMD-SHELL", 'clickhouse-client --query "SELECT 1"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+  op-api:
+    image: lindesvard/openpanel-api:latest
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "3200:3000"
+    command: >
+      sh -c "
+        echo 'Running migrations...'
+        CI=true pnpm -r run migrate:deploy
+
+        pnpm start
+      "
+    networks:
+      - local-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      local-postgres:
+        condition: service_healthy
+      local-clickhouse:
+        condition: service_healthy
+      local-redis:
+        condition: service_healthy
+
+  op-dashboard:
+    image: lindesvard/openpanel-dashboard:latest
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "3201:3000"
+    networks:
+      - local-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      op-api:
+        condition: service_healthy
+
+  op-worker:
+    image: lindesvard/openpanel-worker:latest
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "3202:3000"
+    networks:
+      - local-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      op-api:
+        condition: service_healthy
+    deploy:
+      mode: replicated
+      replicas: 3
+
 volumes:
   pg_data:
     driver: local
@@ -157,6 +258,10 @@ volumes:
   rabbitmq_data:
     driver: local
   ghost_data:
+    driver: local
+  op-ch-data:
+    driver: local
+  op-ch-logs:
     driver: local
 
 networks:
