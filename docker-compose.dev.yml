@@ -1,9 +1,12 @@
 services:
-  local-postgres:
-    container_name: local-postgres
+  postgresql:
+    container_name: database-postgresql
     image: docker.io/postgres:15-alpine
     restart: always
-    env_file: .env
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_DB=${DB_NAME}
     ports:
       - "5432:5432"
     volumes:
@@ -30,9 +33,9 @@ services:
   #   networks:
   #     - local-network
 
-  local-mysql:
+  mysql:
+    container_name: database-mysql
     image: docker.io/mysql:latest
-    container_name: local-mysql
     restart: always
     environment:
       - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
@@ -44,9 +47,9 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
-  local-redis:
+  redis:
+    container_name: cache-redis
     image: docker.io/redis:7.4-alpine
-    container_name: local-redis
     env_file: .env
     restart: always
     environment:
@@ -64,8 +67,8 @@ services:
       timeout: 5s
       retries: 5
 
-  local-rabbitmq:
-    container_name: local-rabbitmq
+  rabbitmq:
+    container_name: cache-rabbitmq
     image: rabbitmq:3.12-management
     ports:
       - 5672:5672
@@ -81,12 +84,15 @@ services:
       retries: 3
       start_period: 3s
 
-  local-minio:
-    container_name: local-minio
+  minio:
+    container_name: storage-minio
     image: quay.io/minio/minio
     command: server /data --console-address ":9090"
     restart: always
-    env_file: .env
+    environment:
+      - MINIO_ROOT_USER=${MINIO_USERNAME}
+      - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD}
+      - MINIO_REGION=${MINIO_REGION}
     ports:
       - "9000:9000"
       - "9090:9090"
@@ -95,9 +101,9 @@ services:
     networks:
       - local-network
 
-  local-logger:
+  logger:
     image: docker.io/amir20/dozzle:latest
-    container_name: local-dozzle
+    container_name: app-dozzle
     restart: unless-stopped
     environment:
       DOZZLE_AUTH_PROVIDER: simple
@@ -109,9 +115,9 @@ services:
     networks:
       - local-network
 
-  local-chartdb:
+  chartdb:
     image: ghcr.io/chartdb/chartdb:latest
-    container_name: local-chartdb
+    container_name: app-chartdb
     restart: unless-stopped
     environment:
       OPENAI_API_KEY: ${OPENAI_API_KEY}
@@ -120,9 +126,9 @@ services:
     networks:
       - local-network
 
-  local-ghost:
+  ghost:
     image: docker.io/ghost:5-alpine
-    container_name: blog-ghost
+    container_name: app-ghost
     restart: always
     environment:
       # see https://ghost.org/docs/config/#configuration-options
@@ -150,99 +156,95 @@ services:
       - local-network
 
   # clickhouse for open panel
-  local-clickhouse:
-    image: clickhouse/clickhouse-server:24.3.2-alpine
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "8123:8123" # for HTTP
-      - "8124:9000" # for native client
-    volumes:
-      - op-ch-data:/var/lib/clickhouse
-      - op-ch-logs:/var/log/clickhouse-server
-      - ./clickhouse/clickhouse-config.xml:/etc/clickhouse-server/config.d/op-config.xml:ro
-      - ./clickhouse/clickhouse-user-config.xml:/etc/clickhouse-server/users.d/op-user-config.xml:ro
-      - ./clickhouse/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
-    networks:
-      - local-network
-    healthcheck:
-      test: ["CMD-SHELL", 'clickhouse-client --query "SELECT 1"']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    ulimits:
-      nofile:
-        soft: 262144
-        hard: 262144
+  # local-clickhouse:
+  #   image: clickhouse/clickhouse-server:24.3.2-alpine
+  #   restart: always
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - "8123:8123" # for HTTP
+  #     - "8124:9000" # for native client
+  #   volumes:
+  #     - op-ch-data:/var/lib/clickhouse
+  #     - op-ch-logs:/var/log/clickhouse-server
+  #     - ./clickhouse/clickhouse-config.xml:/etc/clickhouse-server/config.d/op-config.xml:ro
+  #     - ./clickhouse/clickhouse-user-config.xml:/etc/clickhouse-server/users.d/op-user-config.xml:ro
+  #     - ./clickhouse/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
+  #   networks:
+  #     - local-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", 'clickhouse-client --query "SELECT 1"']
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   ulimits:
+  #     nofile:
+  #       soft: 262144
+  #       hard: 262144
 
-  op-api:
-    image: lindesvard/openpanel-api:latest
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "3200:3000"
-    command: >
-      sh -c "
-        echo 'Running migrations...'
-        CI=true pnpm -r run migrate:deploy
+  # op-api:
+  #   image: lindesvard/openpanel-api:latest
+  #   restart: always
+  #   env_file:
+  #     - .env
+  #   command: >
+  #     sh -c "
+  #       echo 'Running migrations...'
+  #       CI=true pnpm -r run migrate:deploy
 
-        pnpm start
-      "
-    networks:
-      - local-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/healthcheck || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    depends_on:
-      local-postgres:
-        condition: service_healthy
-      local-clickhouse:
-        condition: service_healthy
-      local-redis:
-        condition: service_healthy
+  #       pnpm start
+  #     "
+  #   networks:
+  #     - local-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -f http://localhost:3000/healthcheck || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   depends_on:
+  #     local-postgres:
+  #       condition: service_healthy
+  #     local-clickhouse:
+  #       condition: service_healthy
+  #     local-redis:
+  #       condition: service_healthy
 
-  op-dashboard:
-    image: lindesvard/openpanel-dashboard:latest
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "3201:3000"
-    networks:
-      - local-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/healthcheck || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    depends_on:
-      op-api:
-        condition: service_healthy
+  # op-dashboard:
+  #   image: lindesvard/openpanel-dashboard:latest
+  #   restart: always
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - local-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -f http://localhost:3000/api/healthcheck || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   depends_on:
+  #     op-api:
+  #       condition: service_healthy
 
-  op-worker:
-    image: lindesvard/openpanel-worker:latest
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "3202:3000"
-    networks:
-      - local-network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/healthcheck || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    depends_on:
-      op-api:
-        condition: service_healthy
-    deploy:
-      mode: replicated
-      replicas: 3
+  # op-worker:
+  #   image: lindesvard/openpanel-worker:latest
+  #   restart: always
+  #   env_file:
+  #     - .env
+  #   networks:
+  #     - local-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -f http://localhost:3000/healthcheck || exit 1"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   depends_on:
+  #     op-api:
+  #       condition: service_healthy
+  #   deploy:
+  #     mode: replicated
+  #     replicas: 3
 
 volumes:
   pg_data:
