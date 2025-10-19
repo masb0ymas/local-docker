@@ -1,7 +1,7 @@
 services:
   postgresql:
     container_name: database-postgresql
-    image: docker.io/postgres:15-alpine
+    image: docker.io/postgres:18-alpine
     restart: unless-stopped
     environment:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -127,36 +127,36 @@ services:
     networks:
       - local-network
 
-  ghost:
-    image: docker.io/ghost:5-alpine
-    container_name: app-ghost
-    restart: unless-stopped
-    environment:
-      # see https://ghost.org/docs/config/#configuration-options
-      - url=http://localhost:2368
-      # setup database
-      - database__client=mysql
-      - database__connection__host=${GHOST_HOST}
-      - database__connection__port=${GHOST_PORT}
-      - database__connection__user=${GHOST_USERNAME}
-      - database__connection__password=${GHOST_PASSWORD}
-      - database__connection__database=${GHOST_DATABASE}
-      # smtp email
-      - mail__transport=${MAIL_TRANSPORT}
-      - mail__from=${MAIL_FROM}
-      - mail__options__host=${MAIL_HOST}
-      - mail__options__port=${MAIL_PORT}
-      - mail__options__secureConnection=${MAIL_SECURE_CONNECTION}
-      - mail__options__auth__user=${MAIL_USER}
-      - mail__options__auth__pass=${MAIL_PASSWORD}
-    ports:
-      - "2368:2368"
-    volumes:
-      - ghost_data:/var/lib/ghost/content
-    networks:
-      - local-network
-    depends_on:
-      - mysql
+  # ghost:
+  #   image: docker.io/ghost:5-alpine
+  #   container_name: app-ghost
+  #   restart: unless-stopped
+  #   environment:
+  #     # see https://ghost.org/docs/config/#configuration-options
+  #     - url=http://localhost:2368
+  #     # setup database
+  #     - database__client=mysql
+  #     - database__connection__host=${GHOST_HOST}
+  #     - database__connection__port=${GHOST_PORT}
+  #     - database__connection__user=${GHOST_USERNAME}
+  #     - database__connection__password=${GHOST_PASSWORD}
+  #     - database__connection__database=${GHOST_DATABASE}
+  #     # smtp email
+  #     - mail__transport=${MAIL_TRANSPORT}
+  #     - mail__from=${MAIL_FROM}
+  #     - mail__options__host=${MAIL_HOST}
+  #     - mail__options__port=${MAIL_PORT}
+  #     - mail__options__secureConnection=${MAIL_SECURE_CONNECTION}
+  #     - mail__options__auth__user=${MAIL_USER}
+  #     - mail__options__auth__pass=${MAIL_PASSWORD}
+  #   ports:
+  #     - "2368:2368"
+  #   volumes:
+  #     - ghost_data:/var/lib/ghost/content
+  #   networks:
+  #     - local-network
+  #   depends_on:
+  #     - mysql
 
 volumes:
   pg_data:
@@ -171,8 +171,8 @@ volumes:
     driver: local
   rabbitmq_data:
     driver: local
-  ghost_data:
-    driver: local
+  # ghost_data:
+  #   driver: local
 
 networks:
   local-network:
