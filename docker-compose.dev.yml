@@ -10,7 +10,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pg_data:/var/lib/postgresql/18/docker # POSTGRES 18 ABOVE
+      - pg_data:/var/lib/postgresql # POSTGRES 18 ABOVE
     networks:
       - local-network
     healthcheck:
