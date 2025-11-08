@@ -10,7 +10,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/18/docker # POSTGRES 18 ABOVE
     networks:
       - local-network
     healthcheck:
@@ -120,8 +120,6 @@ services:
     image: ghcr.io/chartdb/chartdb:latest
     container_name: app-chartdb
     restart: unless-stopped
-    environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
     ports:
       - "3101:80" # for chartdb
     networks:
