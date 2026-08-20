@@ -83,20 +83,41 @@ services:
       retries: 3
       start_period: 3s
 
-  minio:
-    container_name: storage-minio
-    image: quay.io/minio/minio
-    command: server /data --console-address ":9090"
+  # minio:
+  #   container_name: storage-minio
+  #   image: quay.io/minio/minio
+  #   command: server /data --console-address ":9090"
+  #   restart: unless-stopped
+  #   environment:
+  #     - MINIO_ROOT_USER=${MINIO_USERNAME}
+  #     - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD}
+  #     - MINIO_REGION=${MINIO_REGION}
+  #   ports:
+  #     - "9000:9000"
+  #     - "9090:9090"
+  #   volumes:
+  #     - minio_data:/data
+  #   networks:
+  #     - local-network
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: app-storage
     restart: unless-stopped
     environment:
-      - MINIO_ROOT_USER=${MINIO_USERNAME}
-      - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD}
-      - MINIO_REGION=${MINIO_REGION}
+      RUSTFS_ACCESS_KEY: 3e51432af92a13f136a2
+      RUSTFS_SECRET_KEY: 87b28fb46a28c7200f65e306241048931ddb512b
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: true
+      RUSTFS_OBS_LOGGER_LEVEL: error
+      RUSTFS_OBS_LOG_DIRECTORY: "/log/rustfs/"
     ports:
-      - "9000:9000"
-      - "9090:9090"
+      - 9000:9000
+      - 9001:9001
     volumes:
-      - minio_data:/data
+      - rustfs_data:/data
+      - ./log:/log
     networks:
       - local-network
 
@@ -166,6 +187,8 @@ volumes:
   mysql_data:
     driver: local
   rabbitmq_data:
+    driver: local
+  rustfs_data:
     driver: local
   # ghost_data:
   #   driver: local

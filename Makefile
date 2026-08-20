@@ -58,3 +58,9 @@ docker/up:
 .PHONY: docker/down
 docker/down:
 	docker compose -f ${DOCKER_COMPOSE_DOWN}
+
+# Backup DB
+# docker exec b37503f1ae6a pg_dump -U postgres house-of-wizard > backup_how.sql
+
+# Restore DB
+# docker exec -i b37503f1ae6a pgsql -U postgres -d how < backup_how.sql
