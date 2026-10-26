@@ -5,3 +5,8 @@
 /pg_data
 /redis_data
 /minio_data
+/mariadb_data
+/mysql_data
+/rabbitmq_data
+/hermes_data
+/ghost_data
